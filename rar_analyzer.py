@@ -1,19 +1,15 @@
 import rarfile
 import zlib
 import sys
+from io import BytesIO
 from typing import List, Dict, Any
 
 
 class RAR5Analyzer:
-    def __init__(self, filename: str):
-        self.filename = filename
-        self.rar_bytes = self._read_file(filename)
+    def __init__(self, rar_bytes: bytes):
+        self.rar_bytes = rar_bytes
         self.archive_size = len(self.rar_bytes)
         self.headers = []
-
-    def _read_file(self, filename):
-        with open(filename, 'rb') as file:
-            return file.read()
 
     def block_crc_read(self, start: int) -> int:
         crc_bytes = self.rar_bytes[start:start + 4]
@@ -39,7 +35,7 @@ class RAR5Analyzer:
         self.headers.append(main_header)
 
         # File Headers
-        with rarfile.RarFile(self.filename) as rf:
+        with rarfile.RarFile(file=BytesIO(self.rar_bytes)) as rf:
             for file_info in rf.infolist():
                 if file_info.is_file():
 
@@ -83,7 +79,10 @@ if __name__ == "__main__":
         sys.exit(1)
 
     filename = sys.argv[1]
-    analyzer = RAR5Analyzer(filename)
+    with open(filename, 'rb') as f:
+        rar_bytes = f.read()
+
+    analyzer = RAR5Analyzer(rar_bytes)
     analyzer.analyze()
 
     headers = analyzer.get_headers()
