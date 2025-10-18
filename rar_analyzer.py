@@ -94,4 +94,4 @@ if __name__ == "__main__":
 
     headers = analyzer.get_headers()
     for header in headers:
-        print(f"\nHeader: {header}")
+        print(f"Header: {header}")
