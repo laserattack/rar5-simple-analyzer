@@ -47,12 +47,19 @@ class RAR5Analyzer:
                         'filename': file_info.filename,
                         'header_start': offset,
                         'header_end': offset + header_len + 4,
-                        'crc_read': self.block_crc_read(offset),
-                        'crc_calc': self.block_crc_calc(offset + 4),
+                        'header_crc_read': self.block_crc_read(offset),
+                        'header_crc_calc': self.block_crc_calc(offset + 4),
                         'data_crc_read': file_info.CRC
                     }
 
                     # File Data CRC
+                    data_crc_offset = None
+                    target_crc = file_info.CRC
+                    target_bytes = target_crc.to_bytes(4, byteorder='little')
+                    search_area = self.rar_bytes[offset:offset + header_len]
+                    data_crc_offset = offset + search_area.find(target_bytes)
+                    file_header['data_crc_offset'] = data_crc_offset
+
                     uncompressed_data = rf.read(file_info.filename)
                     crc32 = zlib.crc32(uncompressed_data) & 0xFFFFFFFF
                     file_header['data_crc_calc'] = crc32
@@ -87,4 +94,4 @@ if __name__ == "__main__":
 
     headers = analyzer.get_headers()
     for header in headers:
-        print(f"Header: {header}")
+        print(f"\nHeader: {header}")
